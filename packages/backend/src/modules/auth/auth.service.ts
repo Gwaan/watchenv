@@ -19,13 +19,13 @@ export class AuthService {
   constructor(
     private jwt: JwtService,
     private config: ConfigService,
-    @Inject(DB) private db: Database,
+    @Inject(DB) private db: Database
   ) {}
 
-  getAuthorizationUrl(): string {
+  buildGitlabAuthorizationUrl(): string {
     const gitlabUrl = this.config.getOrThrow('GITLAB_URL');
     const clientId = this.config.getOrThrow('GITLAB_CLIENT_ID');
-    const redirectUri = `${this.config.getOrThrow('APP_URL')}/auth/callback`;
+    const redirectUri = `${this.config.getOrThrow('APP_URL')}/auth/gitlab/callback`;
     const url = new URL(`${gitlabUrl}/oauth/authorize`);
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
@@ -35,9 +35,9 @@ export class AuthService {
     return url.toString();
   }
 
-  async handleCallback(code: string): Promise<{ token: string }> {
+  async authenticateWithGitlab(code: string): Promise<{ token: string }> {
     const gitlabUrl = this.config.getOrThrow('GITLAB_URL');
-    const redirectUri = `${this.config.getOrThrow('APP_URL')}/auth/callback`;
+    const redirectUri = `${this.config.getOrThrow('APP_URL')}/auth/gitlab/callback`;
 
     const { data: tokenData } = await axios.post(`${gitlabUrl}/oauth/token`, {
       client_id: this.config.getOrThrow('GITLAB_CLIENT_ID'),
@@ -84,7 +84,7 @@ export class AuthService {
     };
   }
 
-  async getMe(userId: string) {
+  async findCurrentUser(userId: string) {
     return this.db.query.users.findFirst({
       where: eq(users.id, userId),
       columns: {
