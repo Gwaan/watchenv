@@ -1,60 +1,32 @@
-# Dependencies
 node_modules/
-.pnp
-.pnp.js
-
-# Build outputs
 dist/
 build/
 out/
-.next/
-.nuxt/
 
-# Environment files
 .env
 .env.local
 .env.*.local
 !.env.example
 
-# Logs
 logs/
 *.log
 npm-debug.log*
 pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# Runtime
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage
-coverage/
-.nyc_output/
-
-# TypeScript
 *.tsbuildinfo
 
-# Prisma
-packages/backend/prisma/migrations/*.sql.tmp
+packages/backend/src/db/migrations/
 
-# VSCode
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/launch.json
 
-# OS
 .DS_Store
 Thumbs.db
 
-# Docker
-.dockerignore
-
-# pnpm
 .pnpm-store/
-
-# Turbo
 .turbo/
+
+coverage/
+.nyc_output/
