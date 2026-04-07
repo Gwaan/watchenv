@@ -25,7 +25,7 @@ export class AuthService {
   buildGitlabAuthorizationUrl(): string {
     const gitlabUrl = this.config.getOrThrow('GITLAB_URL');
     const clientId = this.config.getOrThrow('GITLAB_CLIENT_ID');
-    const redirectUri = `${this.config.getOrThrow('APP_URL')}/auth/gitlab/callback`;
+    const redirectUri = `${this.config.getOrThrow('APP_URL')}/api/auth/gitlab/callback`;
     const url = new URL(`${gitlabUrl}/oauth/authorize`);
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
@@ -37,7 +37,7 @@ export class AuthService {
 
   async authenticateWithGitlab(code: string): Promise<{ token: string }> {
     const gitlabUrl = this.config.getOrThrow('GITLAB_URL');
-    const redirectUri = `${this.config.getOrThrow('APP_URL')}/auth/gitlab/callback`;
+    const redirectUri = `${this.config.getOrThrow('APP_URL')}/api/auth/gitlab/callback`;
 
     const { data: tokenData } = await axios.post(`${gitlabUrl}/oauth/token`, {
       client_id: this.config.getOrThrow('GITLAB_CLIENT_ID'),

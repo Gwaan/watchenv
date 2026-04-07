@@ -5,11 +5,14 @@
   "description": "GitLab deployment dashboard for shared staging environments",
   "scripts": {
     "dev": "docker compose up --build",
+    "backend": "pnpm --filter @watchenv/backend start:dev",
+    "frontend": "pnpm --filter @watchenv/frontend start",
+    "start": "concurrently \"pnpm backend\" \"pnpm frontend\"",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "migrate": "pnpm --filter backend migrate",
-    "studio": "pnpm --filter backend studio"
+    "migrate": "pnpm --filter @watchenv/backend migrate",
+    "studio": "pnpm --filter @watchenv/backend studio"
   },
   "engines": {
     "node": ">=20.0.0",

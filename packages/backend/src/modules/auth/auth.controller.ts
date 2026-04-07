@@ -10,8 +10,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('gitlab/authorize')
-  authorize(@Res() res: Response) {
-    res.redirect(this.authService.buildGitlabAuthorizationUrl());
+  authorize() {
+    return { url: this.authService.buildGitlabAuthorizationUrl() };
   }
 
   @Get('gitlab/callback')
