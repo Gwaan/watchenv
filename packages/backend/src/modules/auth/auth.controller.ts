@@ -31,10 +31,9 @@ export class AuthController {
     return this.authService.findCurrentUser(user.sub);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('session')
   logout(@Res() res: Response) {
     res.clearCookie('access_token');
-    res.sendStatus(200);
+    res.status(200).end();
   }
 }

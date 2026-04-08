@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
@@ -16,9 +17,10 @@ import { AuthService } from '../../core/auth.service';
 })
 export class DashboardComponent {
   private auth = inject(AuthService);
+  private router = inject(Router);
   user = toSignal(this.auth.getSession());
 
   logout() {
-    this.auth.logout().subscribe(() => (window.location.href = '/login'));
+    this.auth.logout().subscribe(() => this.router.navigate(['/login']));
   }
 }
