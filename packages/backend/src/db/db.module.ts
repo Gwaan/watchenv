@@ -1,6 +1,8 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createDb, Database } from './index';
+import { Kysely } from 'kysely';
+import { createDb } from './index';
+import type { Database } from './types';
 
 export const DB = Symbol('DB');
 
@@ -10,7 +12,7 @@ export const DB = Symbol('DB');
     {
       provide: DB,
       inject: [ConfigService],
-      useFactory: (config: ConfigService): Database => {
+      useFactory: (config: ConfigService): Kysely<Database> => {
         return createDb(config.getOrThrow('DATABASE_URL'));
       },
     },

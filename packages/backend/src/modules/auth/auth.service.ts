@@ -3,10 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { createId } from '@paralleldrive/cuid2';
 import axios from 'axios';
-import { eq } from 'drizzle-orm';
+import type { Kysely } from 'kysely';
 import { DB } from '../../db/db.module';
-import type { Database } from '../../db/index';
-import { users } from '../../db/schema';
+import type { Database } from '../../db/types';
 
 export interface JwtPayload {
   sub: string;
@@ -19,7 +18,7 @@ export class AuthService {
   constructor(
     private jwt: JwtService,
     private config: ConfigService,
-    @Inject(DB) private db: Database
+    @Inject(DB) private db: Kysely<Database>
   ) {}
 
   buildGitlabAuthorizationUrl(): string {
@@ -51,8 +50,8 @@ export class AuthService {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
 
-    const [user] = await this.db
-      .insert(users)
+    const user = await this.db
+      .insertInto('users')
       .values({
         id: createId(),
         gitlabId: profile.id,
@@ -64,9 +63,8 @@ export class AuthService {
         refreshToken: tokenData.refresh_token ?? null,
         tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
       })
-      .onConflictDoUpdate({
-        target: users.gitlabId,
-        set: {
+      .onConflict((oc) =>
+        oc.column('gitlabId').doUpdateSet({
           username: profile.username,
           email: profile.email,
           displayName: profile.name,
@@ -75,9 +73,10 @@ export class AuthService {
           refreshToken: tokenData.refresh_token ?? null,
           tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
           updatedAt: new Date(),
-        },
-      })
-      .returning();
+        })
+      )
+      .returningAll()
+      .executeTakeFirstOrThrow();
 
     return {
       token: this.jwt.sign({ sub: user.id, username: user.username, email: user.email }),
@@ -85,17 +84,10 @@ export class AuthService {
   }
 
   async findCurrentUser(userId: string) {
-    return this.db.query.users.findFirst({
-      where: eq(users.id, userId),
-      columns: {
-        id: true,
-        gitlabId: true,
-        username: true,
-        email: true,
-        displayName: true,
-        avatarUrl: true,
-        createdAt: true,
-      },
-    });
+    return this.db
+      .selectFrom('users')
+      .select(['id', 'gitlabId', 'username', 'email', 'displayName', 'avatarUrl', 'createdAt'])
+      .where('id', '=', userId)
+      .executeTakeFirst();
   }
 }
