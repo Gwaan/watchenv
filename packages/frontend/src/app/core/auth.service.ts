@@ -25,8 +25,8 @@ export class AuthService {
   }
 
   loadSession(): Observable<User | null> {
-    if (this.user() !== undefined) {
-      return of(this.user() ?? null);
+    if (this.user()) {
+      return of(this.user());
     }
 
     return this.http.get<User>(`${this.api}/session`, { withCredentials: true }).pipe(
