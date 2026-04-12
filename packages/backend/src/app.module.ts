@@ -6,6 +6,7 @@ import { DbModule } from './db/db.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { EnvironmentsModule } from './modules/environments/environments.module';
+import { DeploymentsModule } from './modules/deployments/deployments.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EnvironmentsModule } from './modules/environments/environments.module';
     AuthModule,
     ProjectsModule,
     EnvironmentsModule,
+    DeploymentsModule,
   ],
   controllers: [],
   providers: [],
