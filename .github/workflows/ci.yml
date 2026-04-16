@@ -9,16 +9,41 @@ on:
       - master
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  test:
+    name: Lint & Test Build
+    runs-on: ubuntu-24.04
+    container: node:24-alpine
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-      - name: Use Node.js 24
-        uses: actions/setup-node@v4
+
+      - name: Get pnpm store directory
+        shell: sh
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
         with:
-          node-version: 24
-          cache: "pnpm"
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
+        env:
+          CI: true
         run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
