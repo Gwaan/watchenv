@@ -4,9 +4,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DbModule } from './db/db.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { ProjectsModule } from './modules/projects/projects.module';
-import { EnvironmentsModule } from './modules/environments/environments.module';
 import { DeploymentsModule } from './modules/deployments/deployments.module';
+import { EnvironmentsModule } from './modules/environments/environments.module';
+import { ProjectsModule } from './modules/projects/projects.module';
+import { SseModule } from './modules/sse/sse.module';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { DeploymentsModule } from './modules/deployments/deployments.module';
     ProjectsModule,
     EnvironmentsModule,
     DeploymentsModule,
+    WebhooksModule,
+    SseModule,
   ],
   controllers: [],
   providers: [],

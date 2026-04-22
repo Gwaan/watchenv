@@ -27,6 +27,15 @@ export class EnvironmentsService {
     return env;
   }
 
+  updateCurrentDeployment(id: string, deploymentId: string) {
+    return this.db
+      .updateTable('environments')
+      .set({ currentDeploymentId: deploymentId, updatedAt: new Date() })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
   upsert(dto: UpsertEnvironmentDto) {
     return this.db
       .insertInto('environments')
