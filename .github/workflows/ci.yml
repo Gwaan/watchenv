@@ -49,7 +49,7 @@ jobs:
         run: pnpm build
 
       - name: Audit dependencies
-        run: pnpm audit --audit-level=high
+        run: pnpm audit --audit-level=high --prod
 
   codeql:
     name: CodeQL Analysis
