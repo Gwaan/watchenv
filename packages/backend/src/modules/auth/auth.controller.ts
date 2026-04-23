@@ -1,13 +1,17 @@
-import { Controller, Delete, Get, Query, Res, UseGuards } from '@nestjs/common';
+import { Controller, Delete, forwardRef, Get, Inject, Query, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import type { JwtPayload } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './current-user.decorator';
+import { SyncService } from '../sync/sync.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject(forwardRef(() => SyncService)) private readonly syncService: SyncService,
+  ) {}
 
   @Get('gitlab/authorize')
   authorize() {
@@ -16,7 +20,8 @@ export class AuthController {
 
   @Get('gitlab/callback')
   async callback(@Query('code') code: string, @Res() res: Response) {
-    const { token } = await this.authService.authenticateWithGitlab(code);
+    const { token, userId, accessToken } = await this.authService.authenticateWithGitlab(code);
+    await this.syncService.syncUserProjects(userId, accessToken).catch(() => undefined);
     res.cookie('access_token', token, {
       httpOnly: true,
       sameSite: 'strict',

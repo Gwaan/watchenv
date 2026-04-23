@@ -42,6 +42,7 @@ services:
         node_exporter['enable'] = false
         redis_exporter['enable'] = false
         postgres_exporter['enable'] = false
+        gitlab_rails['outbound_local_requests_allowlist'] = ['host.docker.internal']
     ports:
       - '8181:80'
     volumes:
@@ -73,7 +74,8 @@ services:
     environment:
       GITLAB_URL: http://gitlab
       GITLAB_ROOT_PASSWORD: ${GITLAB_ROOT_PASSWORD}
-      BACKEND_WEBHOOK_URL: http://backend:3000/api/webhooks/gitlab
+      APP_URL: ${APP_URL}
+      BACKEND_WEBHOOK_URL: http://host.docker.internal:3000/api/webhooks/gitlab
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - gitlab_runner_config:/etc/gitlab-runner

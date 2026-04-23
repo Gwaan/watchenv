@@ -29,12 +29,12 @@ export class AuthService {
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
-    url.searchParams.set('scope', 'read_user');
+    url.searchParams.set('scope', 'read_user read_api');
     url.searchParams.set('state', crypto.randomUUID());
     return url.toString();
   }
 
-  async authenticateWithGitlab(code: string): Promise<{ token: string }> {
+  async authenticateWithGitlab(code: string): Promise<{ token: string; userId: string; accessToken: string }> {
     const gitlabUrl = this.config.getOrThrow('GITLAB_URL');
     const redirectUri = `${this.config.getOrThrow('APP_URL')}/api/auth/gitlab/callback`;
 
@@ -80,6 +80,8 @@ export class AuthService {
 
     return {
       token: this.jwt.sign({ sub: user.id, username: user.username, email: user.email }),
+      userId: user.id,
+      accessToken: tokenData.access_token,
     };
   }
 

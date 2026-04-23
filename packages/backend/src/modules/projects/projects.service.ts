@@ -29,6 +29,14 @@ export class ProjectsService {
     return project;
   }
 
+  findByGitlabIdOptional(gitlabProjectId: number) {
+    return this.db
+      .selectFrom('projects')
+      .selectAll()
+      .where('gitlabProjectId', '=', gitlabProjectId)
+      .executeTakeFirst();
+  }
+
   async findOne(id: string) {
     const project = await this.db
       .selectFrom('projects')

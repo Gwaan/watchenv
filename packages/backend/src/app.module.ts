@@ -8,6 +8,7 @@ import { DeploymentsModule } from './modules/deployments/deployments.module';
 import { EnvironmentsModule } from './modules/environments/environments.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { SseModule } from './modules/sse/sse.module';
+import { SyncModule } from './modules/sync/sync.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { WebhooksModule } from './modules/webhooks/webhooks.module';
     DeploymentsModule,
     WebhooksModule,
     SseModule,
+    SyncModule,
   ],
   controllers: [],
   providers: [],
