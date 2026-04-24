@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import type { Environment } from './models';
+import type { Environment } from '@watchenv/shared';
 
 @Injectable({ providedIn: 'root' })
 export class EnvironmentsService {

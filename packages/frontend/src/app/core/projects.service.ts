@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import type { Project } from './models';
+import type { Project } from '@watchenv/shared';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {

@@ -56,12 +56,10 @@ export class WebhooksService {
       environmentId: environment.id,
     });
 
-    const updatedEnvironment = await this.environmentsService.updateCurrentDeployment(
-      environment.id,
-      deployment.id,
-    );
+    await this.environmentsService.updateCurrentDeployment(environment.id, deployment.id);
 
-    this.eventEmitter.emit('deployment.updated', { deployment, environment: updatedEnvironment });
+    const fullEnv = await this.environmentsService.findByIdWithDeployment(environment.id);
+    this.eventEmitter.emit('deployment.updated', { type: 'environment.updated', environment: fullEnv });
   }
 
   private verifyToken(token: string, secret: string): boolean {

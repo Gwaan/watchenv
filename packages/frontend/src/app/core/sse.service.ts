@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import type { SseDeploymentEvent } from './models';
+import type { SseEnvironmentUpdatedEvent } from '@watchenv/shared';
 
 @Injectable({ providedIn: 'root' })
 export class SseService {
-  connect(): Observable<SseDeploymentEvent> {
+  connect(): Observable<SseEnvironmentUpdatedEvent> {
     return new Observable((subscriber) => {
       const es = new EventSource('/api/sse', { withCredentials: true });
 

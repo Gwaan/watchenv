@@ -21,6 +21,7 @@
     "migrate": "node --env-file=../../.env -r ts-node/register -r tsconfig-paths/register src/db/migrate.ts"
   },
   "dependencies": {
+    "@watchenv/shared": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",

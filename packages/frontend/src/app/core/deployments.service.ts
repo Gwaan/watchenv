@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import type { Deployment } from './models';
+import type { Deployment } from '@watchenv/shared';
 
 @Injectable({ providedIn: 'root' })
 export class DeploymentsService {

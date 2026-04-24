@@ -1,63 +1,42 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { createId } from '@paralleldrive/cuid2';
-import type { Kysely } from 'kysely';
-import { DB } from '../../db/db.module';
-import type { Database } from '../../db/types';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Selectable } from 'kysely';
+import type { Project } from '@watchenv/shared';
+import type { ProjectsTable } from '../../db/types';
+import type { CreateProjectDto } from './projects.repository';
+import { ProjectsRepository } from './projects.repository';
 
-export interface CreateProjectDto {
-  gitlabProjectId: number;
-  name: string;
-  namespacePath: string;
-  webhookSecret: string;
-}
+export type { CreateProjectDto };
 
 @Injectable()
 export class ProjectsService {
-  constructor(@Inject(DB) private db: Kysely<Database>) {}
+  constructor(private readonly repo: ProjectsRepository) {}
 
-  findAll() {
-    return this.db.selectFrom('projects').selectAll().execute();
+  findAll(): Promise<Project[]> {
+    return this.repo.findAll();
   }
 
-  async findByGitlabId(gitlabProjectId: number) {
-    const project = await this.db
-      .selectFrom('projects')
-      .selectAll()
-      .where('gitlabProjectId', '=', gitlabProjectId)
-      .executeTakeFirst();
-    if (!project) throw new NotFoundException(`Project with gitlab id ${gitlabProjectId} not found`);
-    return project;
-  }
-
-  findByGitlabIdOptional(gitlabProjectId: number) {
-    return this.db
-      .selectFrom('projects')
-      .selectAll()
-      .where('gitlabProjectId', '=', gitlabProjectId)
-      .executeTakeFirst();
-  }
-
-  async findOne(id: string) {
-    const project = await this.db
-      .selectFrom('projects')
-      .selectAll()
-      .where('id', '=', id)
-      .executeTakeFirst();
-
+  async findOne(id: string): Promise<Selectable<ProjectsTable>> {
+    const project = await this.repo.findById(id);
     if (!project) throw new NotFoundException(`Project ${id} not found`);
     return project;
   }
 
-  create(dto: CreateProjectDto) {
-    return this.db
-      .insertInto('projects')
-      .values({ id: createId(), ...dto })
-      .returningAll()
-      .executeTakeFirstOrThrow();
+  async findByGitlabId(gitlabProjectId: number): Promise<Selectable<ProjectsTable>> {
+    const project = await this.repo.findByGitlabId(gitlabProjectId);
+    if (!project) throw new NotFoundException(`Project with gitlab id ${gitlabProjectId} not found`);
+    return project;
   }
 
-  async delete(id: string) {
+  findByGitlabIdOptional(gitlabProjectId: number): Promise<Selectable<ProjectsTable> | undefined> {
+    return this.repo.findByGitlabId(gitlabProjectId);
+  }
+
+  create(dto: CreateProjectDto): Promise<Project> {
+    return this.repo.create(dto);
+  }
+
+  async delete(id: string): Promise<void> {
     await this.findOne(id);
-    await this.db.deleteFrom('projects').where('id', '=', id).execute();
+    await this.repo.delete(id);
   }
 }

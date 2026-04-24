@@ -11,6 +11,7 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
+    "@watchenv/shared": "workspace:*",
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
     "@angular/core": "^21.2.0",

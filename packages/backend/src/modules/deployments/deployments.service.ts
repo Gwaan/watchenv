@@ -1,45 +1,25 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { createId } from '@paralleldrive/cuid2';
-import type { Kysely } from 'kysely';
-import { DB } from 'src/db/db.module';
-import type { Database } from '../../db/types';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Selectable } from 'kysely';
+import type { Deployment } from '@watchenv/shared';
+import type { DeploymentsTable } from '../../db/types';
+import { DeploymentsRepository } from './deployments.repository';
 import type { UpsertDeploymentDto } from './dto/upsert-deployment.dto';
 
 @Injectable()
 export class DeploymentsService {
-  constructor(@Inject(DB) private db: Kysely<Database>) {}
+  constructor(private readonly repo: DeploymentsRepository) {}
 
-  findByEnvironment(environmentId: string) {
-    return this.db
-      .selectFrom('deployments')
-      .selectAll()
-      .where('environmentId', '=', environmentId)
-      .orderBy('triggeredAt', 'desc')
-      .execute();
+  findByEnvironment(environmentId: string): Promise<Deployment[]> {
+    return this.repo.findByEnvironment(environmentId);
   }
 
-  async findOne(id: string) {
-    const deployment = await this.db
-      .selectFrom('deployments')
-      .selectAll()
-      .where('id', '=', id)
-      .executeTakeFirst();
-    if (!deployment) throw new NotFoundException(`Deployment ${id} not found`);
-    return deployment;
+  async findOne(id: string): Promise<Deployment> {
+    const dep = await this.repo.findOne(id);
+    if (!dep) throw new NotFoundException(`Deployment ${id} not found`);
+    return dep;
   }
 
-  upsert(dto: UpsertDeploymentDto) {
-    return this.db
-      .insertInto('deployments')
-      .values({ id: createId(), ...dto })
-      .onConflict(oc =>
-        oc.column('gitlabDeploymentId').doUpdateSet({
-          status: dto.status,
-          finishedAt: dto.finishedAt ?? null,
-          updatedAt: new Date(),
-        })
-      )
-      .returningAll()
-      .executeTakeFirstOrThrow();
+  upsert(dto: UpsertDeploymentDto): Promise<Selectable<DeploymentsTable>> {
+    return this.repo.upsert(dto);
   }
 }

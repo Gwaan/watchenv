@@ -1,10 +1,9 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, forkJoin, of, Subject, switchMap, takeUntil, tap, finalize } from 'rxjs';
+import type { Deployment, DeploymentStatus, Environment, Project } from '@watchenv/shared';
 import { AuthService } from '../../core/auth.service';
-import { DeploymentsService } from '../../core/deployments.service';
 import { EnvironmentsService } from '../../core/environments.service';
-import type { Deployment, DeploymentStatus, Environment, Project } from '../../core/models';
 import { ProjectsService } from '../../core/projects.service';
 import { SseService } from '../../core/sse.service';
 import { ThemeService } from '../../core/theme.service';
@@ -54,7 +53,7 @@ import { CardComponent } from '../../ui/card';
                           <a [href]="env.externalUrl" target="_blank" rel="noopener" class="ext-link">↗</a>
                         }
                       </div>
-                      @if (getDeployment(env); as dep) {
+                      @if (env.currentDeployment; as dep) {
                         <div class="dep-info">
                           <ui-badge [variant]="statusVariant(dep.status)">{{ dep.status }}</ui-badge>
                           <code class="dep-ref">{{ dep.ref }}</code>
@@ -74,7 +73,6 @@ import { CardComponent } from '../../ui/card';
         }
       </main>
     </div>
-
   `,
   styles: [`
     .page {
@@ -210,7 +208,6 @@ import { CardComponent } from '../../ui/card';
       font-size: var(--text-sm);
       color: var(--text-muted);
     }
-
   `],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
@@ -218,14 +215,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly projectsService = inject(ProjectsService);
   private readonly environmentsService = inject(EnvironmentsService);
-  private readonly deploymentsService = inject(DeploymentsService);
   private readonly sseService = inject(SseService);
   protected readonly theme = inject(ThemeService);
 
   protected readonly user = this.auth.user;
   protected readonly projects = signal<Project[]>([]);
   protected readonly envsByProject = signal<Record<string, Environment[]>>({});
-  protected readonly deploymentById = signal<Record<string, Deployment>>({});
   protected readonly loading = signal(true);
 
   private readonly destroy$ = new Subject<void>();
@@ -240,20 +235,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  protected getDeployment(env: Environment): Deployment | null {
-    if (!env.currentDeploymentId) return null;
-    return this.deploymentById()[env.currentDeploymentId] ?? null;
-  }
-
   protected statusVariant(status: DeploymentStatus): BadgeVariant {
-    const map: Record<DeploymentStatus, BadgeVariant> = {
+    const map: Record<string, BadgeVariant> = {
       CREATED: 'neutral',
       RUNNING: 'running',
       SUCCESS: 'success',
       FAILED: 'danger',
       CANCELED: 'neutral',
     };
-    return map[status];
+    return map[status] ?? 'neutral';
   }
 
   protected logout() {
@@ -276,15 +266,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadProjectData(projectId: string) {
     return this.environmentsService.getByProject(projectId).pipe(
       tap(envs => this.envsByProject.update(m => ({ ...m, [projectId]: envs }))),
-      switchMap(envs => {
-        const withDep = envs.filter(e => e.currentDeploymentId);
-        if (!withDep.length) return of([]);
-        return forkJoin(withDep.map(env =>
-          this.deploymentsService.getOne(env.currentDeploymentId!).pipe(
-            tap(dep => this.deploymentById.update(m => ({ ...m, [dep.id]: dep }))),
-          )
-        ));
-      }),
     );
   }
 
@@ -294,21 +275,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
     ).subscribe(event => {
       if (!event) return;
-      const { deployment, environment } = event;
-
+      const { environment } = event;
       this.envsByProject.update(map => {
         const envs = map[environment.projectId] ?? [];
         const idx = envs.findIndex(e => e.id === environment.id);
         const updated = [...envs];
-        if (idx >= 0) {
-          updated[idx] = environment;
-        } else {
-          updated.push(environment);
-        }
+        if (idx >= 0) updated[idx] = environment;
+        else updated.push(environment);
         return { ...map, [environment.projectId]: updated };
       });
-
-      this.deploymentById.update(m => ({ ...m, [deployment.id]: deployment }));
     });
   }
 }
