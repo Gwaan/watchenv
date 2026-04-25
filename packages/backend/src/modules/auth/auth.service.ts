@@ -22,10 +22,11 @@ export class AuthService {
   ) {}
 
   buildGitlabAuthorizationUrl(): string {
-    const gitlabUrl = this.config.getOrThrow('GITLAB_URL');
+    const gitlabPublicUrl =
+      this.config.get('GITLAB_PUBLIC_URL') ?? this.config.getOrThrow('GITLAB_URL');
     const clientId = this.config.getOrThrow('GITLAB_CLIENT_ID');
     const redirectUri = `${this.config.getOrThrow('APP_URL')}/api/auth/gitlab/callback`;
-    const url = new URL(`${gitlabUrl}/oauth/authorize`);
+    const url = new URL(`${gitlabPublicUrl}/oauth/authorize`);
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
@@ -34,7 +35,9 @@ export class AuthService {
     return url.toString();
   }
 
-  async authenticateWithGitlab(code: string): Promise<{ token: string; userId: string; accessToken: string }> {
+  async authenticateWithGitlab(
+    code: string
+  ): Promise<{ token: string; userId: string; accessToken: string }> {
     const gitlabUrl = this.config.getOrThrow('GITLAB_URL');
     const redirectUri = `${this.config.getOrThrow('APP_URL')}/api/auth/gitlab/callback`;
 
@@ -63,7 +66,7 @@ export class AuthService {
         refreshToken: tokenData.refresh_token ?? null,
         tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
       })
-      .onConflict((oc) =>
+      .onConflict(oc =>
         oc.column('gitlabId').doUpdateSet({
           username: profile.username,
           email: profile.email,

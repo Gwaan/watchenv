@@ -28,7 +28,7 @@ OAUTH=$(curl -sf \
   -X POST "${GITLAB_URL}/api/v4/applications" \
   -F "name=WatchEnv" \
   -F "redirect_uri=${APP_URL}/api/auth/gitlab/callback" \
-  -F "scopes=read_user api")
+  -F "scopes=read_user read_api")
 
 echo "==> Creating test project..."
 PROJECT=$(curl -s \
