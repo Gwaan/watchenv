@@ -22,13 +22,20 @@ if [ -z "${API_TOKEN}" ]; then
   exit 1
 fi
 
+echo "==> Allowing local requests from webhooks..."
+curl -sf \
+  -H "PRIVATE-TOKEN: ${API_TOKEN}" \
+  -X PUT "${GITLAB_URL}/api/v4/application/settings" \
+  -F "allow_local_requests_from_web_hooks_and_services=true" > /dev/null
+
 echo "==> Creating OAuth application..."
+REDIRECT_URIS="$(printf '%s\nhttp://localhost:3000/api/auth/gitlab/callback' "${APP_URL}/api/auth/gitlab/callback")"
 OAUTH=$(curl -sf \
   -H "PRIVATE-TOKEN: ${API_TOKEN}" \
   -X POST "${GITLAB_URL}/api/v4/applications" \
   -F "name=WatchEnv" \
-  -F "redirect_uri=${APP_URL}/api/auth/gitlab/callback" \
-  -F "scopes=read_user read_api")
+  -F "redirect_uri=${REDIRECT_URIS}" \
+  -F "scopes=read_user api")
 
 echo "==> Creating test project..."
 PROJECT=$(curl -s \
@@ -105,13 +112,11 @@ else
     -d "{\"branch\":\"main\",\"content\":$(echo "$CI_CONTENT" | jq -Rs .),\"commit_message\":\"chore: add CI pipeline\"}" > /dev/null
 fi
 
-echo "==> Creating deployment webhook..."
-curl -sf \
-  -H "PRIVATE-TOKEN: ${API_TOKEN}" \
-  -X POST "${GITLAB_URL}/api/v4/projects/${PROJECT_ID}/hooks" \
-  -F "url=${BACKEND_WEBHOOK_URL}" \
-  -F "deployment_events=true" \
-  -F "token=test-webhook-secret" > /dev/null
+echo "==> Creating project webhook via Rails..."
+docker exec "${GITLAB_CONTAINER}" \
+  gitlab-rails runner \
+  "p = Project.find(${PROJECT_ID}); p.hooks.destroy_all; p.hooks.create!(url: '${BACKEND_WEBHOOK_URL}', deployment_events: true, token: '${WEBHOOK_SECRET}')"
+echo "    Webhook registered (${BACKEND_WEBHOOK_URL})"
 
 echo "==> Registering GitLab Runner..."
 RUNNER=$(curl -sf \

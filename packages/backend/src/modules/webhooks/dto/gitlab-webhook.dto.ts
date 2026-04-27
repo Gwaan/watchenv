@@ -9,7 +9,7 @@ export const GitlabDeploymentEventSchema = z.object({
   environment: z.string(),
   environment_slug: z.string(),
   environment_external_url: z.string().nullish(),
-  environment_id: z.number(),
+  environment_id: z.number().optional(),
   project: z.object({ id: z.number() }),
   ref: z.string(),
   short_sha: z.string(),

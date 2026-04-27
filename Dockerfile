@@ -13,7 +13,7 @@ FROM installer AS builder
 COPY packages/ ./packages/
 RUN pnpm --filter @watchenv/frontend build
 RUN pnpm --filter @watchenv/backend build
-RUN pnpm --filter @watchenv/backend deploy --prod /deploy
+RUN pnpm --filter @watchenv/backend deploy --prod --legacy /deploy
 
 FROM base AS runner
 WORKDIR /app
@@ -22,4 +22,4 @@ COPY --from=builder /workspace/packages/backend/dist ./dist
 COPY --from=builder /workspace/packages/frontend/dist/frontend/browser ./public
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "node dist/db/migrate.js && node dist/main.js"]

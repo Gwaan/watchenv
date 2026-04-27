@@ -34,7 +34,7 @@ export class WebhooksService {
     }
 
     const environment = await this.environmentsService.upsert({
-      gitlabEnvId: payload.environment_id,
+      gitlabEnvId: payload.environment_id ?? null,
       slug: payload.environment_slug,
       name: payload.environment,
       externalUrl: payload.environment_external_url ?? null,

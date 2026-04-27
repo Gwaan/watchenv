@@ -3,15 +3,14 @@
   "configurations": [
     {
       "type": "node",
-      "request": "launch",
+      "request": "attach",
       "name": "Debug Nest Framework",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@watchenv/backend", "start:debug"],
-      "autoAttachChildProcesses": true,
+      "port": 9229,
       "restart": true,
       "sourceMaps": true,
-      "stopOnEntry": false,
-      "console": "integratedTerminal"
+      "localRoot": "${workspaceFolder}/packages/backend",
+      "remoteRoot": "${workspaceFolder}/packages/backend",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

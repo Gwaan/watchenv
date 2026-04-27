@@ -3,7 +3,7 @@ import { Reservation } from "./reservation"
 
 export interface Environment {
   id: string
-  gitlabEnvId: number
+  gitlabEnvId: number | null
   slug: string
   name: string
   externalUrl: string | null

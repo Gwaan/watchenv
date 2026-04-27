@@ -30,7 +30,7 @@ export class AuthService {
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
-    url.searchParams.set('scope', 'read_user read_api');
+    url.searchParams.set('scope', this.config.get('GITLAB_OAUTH_SCOPES') ?? 'read_user read_api');
     url.searchParams.set('state', crypto.randomUUID());
     return url.toString();
   }

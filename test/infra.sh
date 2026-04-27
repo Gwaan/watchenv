@@ -28,11 +28,14 @@ if [ -n "$FRESH" ]; then
   $COMPOSE down -v 2>/dev/null || true
 fi
 
-echo "==> Building images..."
-$COMPOSE build
+WEBHOOK_BASE_URL=$(grep "^WEBHOOK_BASE_URL=" "$ROOT/.env" | awk -F= '{print $2}')
+BACKEND_WEBHOOK_URL="${WEBHOOK_BASE_URL}/api/webhooks/gitlab"
 
-echo "==> Starting infrastructure..."
-BACKEND_WEBHOOK_URL="http://app:3000/api/webhooks/gitlab" $COMPOSE up -d postgres redis gitlab gitlab-runner gitlab-init
+echo "==> Building images..."
+$COMPOSE build gitlab-init
+
+echo "==> Starting infra (webhook → ${BACKEND_WEBHOOK_URL})..."
+BACKEND_WEBHOOK_URL="${BACKEND_WEBHOOK_URL}" $COMPOSE up -d postgres redis gitlab gitlab-runner gitlab-init
 
 INIT_STATUS=$(docker inspect --format='{{.State.Status}}' watchenv-gitlab-init 2>/dev/null || echo "missing")
 
@@ -61,10 +64,13 @@ if [ -n "$CLIENT_ID" ] && [ -n "$CLIENT_SECRET" ]; then
   echo "==> .env updated (GITLAB_CLIENT_ID=$CLIENT_ID)"
 fi
 
-echo "==> Starting app..."
-docker compose -f docker-compose-test.yml --env-file "$ROOT/.env" up -d app
-
 echo ""
-echo "    App    : http://localhost:3000"
 echo "    GitLab : http://localhost:8181  (root / \$GITLAB_ROOT_PASSWORD)"
+echo "    Postgres: localhost:5432"
+echo "    Redis   : localhost:6379"
+echo ""
+echo "    Lance ton backend localement avec ces vars d'env :"
+echo "    GITLAB_URL=http://localhost:8181"
+echo "    GITLAB_PUBLIC_URL=http://localhost:8181"
+echo "    WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL}"
 echo ""

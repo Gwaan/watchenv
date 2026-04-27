@@ -9,10 +9,15 @@ export class SseService {
       const es = new EventSource('/api/sse', { withCredentials: true });
 
       es.onmessage = (event) => {
+        console.log('sse event deploy received:', event);
         subscriber.next(JSON.parse(event.data));
       };
 
-      es.onerror = () => subscriber.error(new Error('SSE connection lost'));
+      es.onerror = () => {
+        if (es.readyState === EventSource.CLOSED) {
+          subscriber.error(new Error('SSE connection lost'));
+        }
+      };
 
       return () => es.close();
     });

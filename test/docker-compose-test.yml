@@ -6,10 +6,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
       interval: 5s
@@ -20,6 +20,8 @@ services:
     image: redis:7-alpine
     container_name: watchenv-redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - '6379:6379'
     healthcheck:
       test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
       interval: 5s
@@ -30,6 +32,8 @@ services:
     image: gitlab/gitlab-ce:17.6.0-ce.0
     container_name: watchenv-gitlab
     hostname: gitlab
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'http://localhost:8181'
@@ -42,9 +46,10 @@ services:
         node_exporter['enable'] = false
         redis_exporter['enable'] = false
         postgres_exporter['enable'] = false
-        gitlab_rails['outbound_local_requests_allowlist'] = ['host.docker.internal']
+        gitlab_rails['allow_local_requests_from_web_hooks_and_services'] = true
     ports:
       - '8181:80'
+    shm_size: '256m'
     volumes:
       - gitlab_config:/etc/gitlab
       - gitlab_logs:/var/log/gitlab
@@ -74,8 +79,9 @@ services:
     environment:
       GITLAB_URL: http://gitlab
       GITLAB_ROOT_PASSWORD: ${GITLAB_ROOT_PASSWORD}
-      APP_URL: ${APP_URL}
-      BACKEND_WEBHOOK_URL: http://host.docker.internal:3000/api/webhooks/gitlab
+      APP_URL: ${APP_URL:-http://localhost:4200}
+      BACKEND_WEBHOOK_URL: ${BACKEND_WEBHOOK_URL:-http://host.docker.internal:3000/api/webhooks/gitlab}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - gitlab_runner_config:/etc/gitlab-runner
@@ -83,48 +89,6 @@ services:
       gitlab:
         condition: service_healthy
     restart: 'no'
-
-  # backend:
-  #   build:
-  #     context: ./packages/backend
-  #     target: development
-  #   container_name: watchenv-backend
-  #   environment:
-  #     NODE_ENV: development
-  #     DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-  #     REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-  #     JWT_SECRET: ${JWT_SECRET}
-  #     TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
-  #     GITLAB_URL: http://localhost:8181
-  #     GITLAB_CLIENT_ID: ${GITLAB_CLIENT_ID}
-  #     GITLAB_CLIENT_SECRET: ${GITLAB_CLIENT_SECRET}
-  #     APP_URL: http://localhost:5173
-  #     PORT: 3000
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./packages/backend/src:/app/src
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     gitlab-init:
-  #       condition: service_completed_successfully
-
-  # frontend:
-  #   build:
-  #     context: ./packages/frontend
-  #     target: development
-  #   container_name: watchenv-frontend
-  #   environment:
-  #     VITE_API_URL: http://localhost:3000
-  #   ports:
-  #     - "5173:5173"
-  #   volumes:
-  #     - ./packages/frontend/src:/app/src
-  #   depends_on:
-  #     - backend
 
 volumes:
   postgres_data:

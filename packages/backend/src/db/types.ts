@@ -42,7 +42,7 @@ export interface ProjectMembersTable {
 
 export interface EnvironmentsTable {
   id: string;
-  gitlabEnvId: number;
+  gitlabEnvId: number | null;
   slug: string;
   name: string;
   externalUrl: string | null;

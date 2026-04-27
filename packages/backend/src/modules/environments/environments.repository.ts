@@ -35,10 +35,9 @@ export class EnvironmentsRepository {
   upsert(dto: UpsertEnvironmentDto): Promise<Selectable<EnvironmentsTable>> {
     return this.db
       .insertInto('environments')
-      .values({ id: createId(), ...dto })
+      .values({ id: createId(), gitlabEnvId: dto.gitlabEnvId ?? null, ...dto })
       .onConflict(oc =>
-        oc.column('gitlabEnvId').doUpdateSet({
-          slug: dto.slug,
+        oc.columns(['projectId', 'slug']).doUpdateSet({
           name: dto.name,
           externalUrl: dto.externalUrl ?? null,
           updatedAt: new Date(),

@@ -1,6 +1,6 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, forkJoin, of, Subject, switchMap, takeUntil, tap, finalize } from 'rxjs';
+import { catchError, forkJoin, of, retry, Subject, switchMap, takeUntil, tap, finalize } from 'rxjs';
 import type { Deployment, DeploymentStatus, Environment, Project } from '@watchenv/shared';
 import { AuthService } from '../../core/auth.service';
 import { EnvironmentsService } from '../../core/environments.service';
@@ -271,7 +271,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private listenSse() {
     this.sseService.connect().pipe(
-      catchError(() => of(null)),
+      retry({ delay: 5000 }),
       takeUntil(this.destroy$),
     ).subscribe(event => {
       if (!event) return;
